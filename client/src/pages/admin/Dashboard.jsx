@@ -13,7 +13,7 @@ export default function Dashboard(){
 }
 function Manage({section}){
   const[rows,setRows]=useState([]),[edit,setEdit]=useState(null),[status,setStatus]=useState(''),endpoint='/admin/'+section;
-  async function load(){try{const{data}=await api.get(endpoint);setRows(section==='profile'||section==='about'?(data?[data]:[]):data)}catch(e){setStatus(e.response?.data?.message||'Could not load records')}}
+  async function load(){try{const{data}=await api.get(endpoint);setRows(Array.isArray(data)?data:data?[data]:[])}catch(e){setStatus(e.response?.data?.message||'Could not load records')}}
   useEffect(()=>{load()},[section]);
   async function save(e){e.preventDefault();const form=e.currentTarget,f=new FormData(form),data={};for(const key of fields[section]){const v=f.get(key);data[key]=key==='techStack'?String(v||'').split(',').map(x=>x.trim()).filter(Boolean):key==='socialLinks'?String(v||'').split(/\r?\n/).filter(Boolean).map(x=>{const[label,url]=x.split('|');return{label:label?.trim(),url:url?.trim()}}):v}try{if(edit)await api.put(`${endpoint}/${edit._id}`,data);else await api.post(endpoint,data);setEdit(null);setStatus('Saved successfully');form.reset();await load()}catch(x){setStatus(x.response?.data?.message||'Unable to save')}}
   async function remove(row){if(!window.confirm('Delete this item? This cannot be undone.'))return;try{await api.delete(`${endpoint}/${row._id}`);setStatus('Deleted');await load()}catch(e){setStatus(e.response?.data?.message||'Could not delete')}}
