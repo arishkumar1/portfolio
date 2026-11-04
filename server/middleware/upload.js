@@ -1,0 +1,2 @@
+import multer from 'multer';import path from 'node:path';import fs from 'node:fs';
+const dir=process.env.UPLOAD_DIR||'uploads';fs.mkdirSync(dir,{recursive:true});const storage=multer.diskStorage({destination:dir,filename:(req,file,cb)=>cb(null,`${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9._-]/g,'_')}`)});export const upload=multer({storage,limits:{fileSize:8*1024*1024},fileFilter:(req,file,cb)=>{const ok=/^image\/(jpeg|png|webp|gif)$/.test(file.mimetype)||file.mimetype==='application/pdf';cb(ok?null:new Error('Only image or PDF files are allowed'),ok)}});

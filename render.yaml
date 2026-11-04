@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: arish-portfolio-api
+    runtime: node
+    rootDir: server
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    disk:
+      name: portfolio-uploads
+      mountPath: /opt/render/project/src/uploads
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: UPLOAD_DIR
+        value: /opt/render/project/src/uploads
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: CLIENT_URL
+        sync: false
