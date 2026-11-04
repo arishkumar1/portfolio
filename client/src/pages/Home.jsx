@@ -2,7 +2,15 @@ import { useEffect, useState } from 'react';
 import api from '../services/api';
 
 const sections = ['about','skills','projects','experience','education','certificates'];
-const asset = (url) => url?.startsWith('/') ? `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '')}${url}` : url;
+const externalUrl = (value) => {
+  const raw = String(value || '').trim();
+  if (!raw) return null;
+  try {
+    const url = new URL(/^[a-z][a-z\d+.-]*:/i.test(raw) ? raw : `https://${raw}`);
+    return ['http:', 'https:', 'mailto:', 'tel:'].includes(url.protocol) ? url.href : null;
+  } catch { return null; }
+};
+const asset = (url) => url?.startsWith('/') ? `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '')}${url}` : externalUrl(url);
 
 export default function Home(){
   const [data,setData]=useState(null),[error,setError]=useState('');
@@ -13,9 +21,9 @@ export default function Home(){
   return <>
     <header className="nav"><a href="#top">{p?.name||'Portfolio'}</a><nav>{['about','skills','projects','experience','education','certificates','contact'].map(s=><a key={s} href={'#'+s}>{title(s)}</a>)}<a href="/admin/login">Admin</a></nav></header>
     <main id="top">
-      <section className="hero wrap">{p?.photo&&<img className="avatar" src={asset(p.photo)} alt={p.name||'Profile'}/>}<p className="eyebrow">{p?.title||''}</p><h1>{p?.name||'Nothing added yet'}</h1><p>{p?.intro||''}</p>{p?.resume&&<a className="button" href={asset(p.resume)} target="_blank" rel="noreferrer">Download resume</a>}<p>{(p?.socialLinks||[]).map(x=><a className="social" key={x.label} href={x.url}>{x.label}</a>)}</p></section>
+      <section className="hero wrap">{p?.photo&&<img className="avatar" src={asset(p.photo)} alt={p.name||'Profile'}/>}<p className="eyebrow">{p?.title||''}</p><h1>{p?.name||'Nothing added yet'}</h1><p>{p?.intro||''}</p>{p?.resume&&<a className="button" href={asset(p.resume)} target="_blank" rel="noreferrer">Download resume</a>}<p>{(p?.socialLinks||[]).map(x=>{const href=externalUrl(x.url);return href?<a className="social" key={x.label} href={href} target="_blank" rel="noreferrer">{x.label}</a>:null})}</p></section>
       <section id="about" className="wrap"><h2>About me</h2><p>{items.about?.content||'Nothing added yet'}</p></section>
-      {sections.slice(1).map(s=><section id={s} className="wrap" key={s}><h2>{title(s)}</h2>{Array.isArray(items[s])&&items[s].length?<div className="grid">{items[s].map(x=><article className="card" key={x._id}>{(x.image||x.photo)&&<img src={asset(x.image||x.photo)} alt=""/>}<h3>{x.title||x.name||x.category}</h3><p className="preline">{s==='skills'?x.category:(x.description||x.institution||x.organization||'')}</p>{s==='skills'&&<p>{x.level}</p>}{x.techStack?.length>0&&<p>{x.techStack.join(' · ')}</p>}<div className="links">{x.github&&<a href={x.github}>GitHub</a>}{x.live&&<a href={x.live}>Live</a>}{x.url&&<a href={x.url}>Certificate</a>}</div></article>)}</div>:<p className="muted">Nothing added yet</p>}</section>)}
+      {sections.slice(1).map(s=><section id={s} className="wrap" key={s}><h2>{title(s)}</h2>{Array.isArray(items[s])&&items[s].length?<div className="grid">{items[s].map(x=><article className="card" key={x._id}>{(x.image||x.photo)&&<img src={asset(x.image||x.photo)} alt=""/>}<h3>{x.title||x.name||x.category}</h3><p className="preline">{s==='skills'?x.category:(x.description||x.institution||x.organization||'')}</p>{s==='skills'&&<p>{x.level}</p>}{x.techStack?.length>0&&<p>{x.techStack.join(' · ')}</p>}<div className="links">{externalUrl(x.github)&&<a href={externalUrl(x.github)} target="_blank" rel="noreferrer">GitHub</a>}{externalUrl(x.live)&&<a href={externalUrl(x.live)} target="_blank" rel="noreferrer">Live</a>}{externalUrl(x.url)&&<a href={externalUrl(x.url)} target="_blank" rel="noreferrer">Certificate</a>}</div></article>)}</div>:<p className="muted">Nothing added yet</p>}</section>)}
       <section id="contact" className="wrap"><h2>Contact</h2><p>{p?.email||''} {p?.location||''}</p><Contact/></section>
     </main><footer className="wrap">© {new Date().getFullYear()} {p?.name||''}</footer>
   </>;
