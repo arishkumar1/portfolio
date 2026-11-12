@@ -23,8 +23,32 @@ export default function assetUrl(value) {
   return '';
 }
 
+export function downloadAssetUrl(value) {
+  const resolved = assetUrl(value);
+  if (!resolved) return '';
+
+  try {
+    const url = new URL(resolved);
+    if (url.pathname.startsWith('/uploads/') && !url.pathname.startsWith('/uploads/download/')) {
+      const filename = decodeURIComponent(url.pathname.slice('/uploads/'.length));
+      if (filename && !filename.includes('/')) {
+        url.pathname = `/uploads/download/${encodeURIComponent(filename)}`;
+      }
+    }
+    return url.href;
+  } catch {
+    return '';
+  }
+}
+
 export function staticAssetFallback(value) {
   const raw = String(value || '').trim();
-  if (!raw.startsWith('/uploads/')) return '';
-  return new URL(raw, window.location.origin).href;
+  if (!raw) return '';
+  try {
+    const url = new URL(raw, window.location.origin);
+    if (!url.pathname.startsWith('/uploads/')) return '';
+    return new URL(url.pathname, window.location.origin).href;
+  } catch {
+    return '';
+  }
 }

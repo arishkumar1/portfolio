@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-export default function RevealCard({ as: Element = 'article', className = '', children, ...props }) {
+export default function RevealCard({ as: Element = 'article', className = '', direction = '', children, ...props }) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
 
@@ -21,5 +21,5 @@ export default function RevealCard({ as: Element = 'article', className = '', ch
     return () => observer.disconnect();
   }, []);
 
-  return <Element ref={ref} className={`${className} reveal-card${visible ? ' is-visible' : ''}`} {...props}>{children}</Element>;
+  return <Element ref={ref} className={`${className} reveal-card${direction ? ` reveal-${direction}` : ''}${visible ? ' is-visible' : ''}`} {...props}>{children}</Element>;
 }
