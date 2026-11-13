@@ -1,16 +1,224 @@
-import{Router}from'express';import bcrypt from'bcryptjs';import jwt from'jsonwebtoken';import rateLimit from'express-rate-limit';import{unlink}from'node:fs/promises';import{Admin,Profile,About,Skill,Project,Experience,Education,Certificate,Message}from'../models/index.js';import{authMiddleware}from'../middleware/auth.js';
-const r=Router();const models={profile:Profile,about:About,skills:Skill,projects:Project,experience:Experience,education:Education,certificates:Certificate,messages:Message};
-const loginLimit=rateLimit({windowMs:15*60*1000,limit:10,standardHeaders:true,legacyHeaders:false,message:{message:'Too many login attempts. Try again later.'}});
-const cookieOptions={httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:process.env.NODE_ENV==='production'?'none':'lax',partitioned:process.env.NODE_ENV==='production'};
-r.post('/auth/login',loginLimit,async(req,res,next)=>{try{const{username,password}=req.body;const a=await Admin.findOne({username});if(!a||!await bcrypt.compare(password||'',a.passwordHash))return res.status(401).json({message:'Invalid username or password'});const token=jwt.sign({id:a._id,username:a.username},process.env.JWT_SECRET,{expiresIn:'8h'});res.cookie('token',token,{...cookieOptions,maxAge:8*60*60*1000});res.json({username:a.username})}catch(e){next(e)}});
-r.get('/auth/me',authMiddleware,(req,res)=>res.json({username:req.admin.username}));r.post('/auth/logout',(req,res)=>res.clearCookie('token',cookieOptions).json({message:'Logged out'}));
-r.put('/auth/password',authMiddleware,async(req,res,next)=>{try{const{currentPassword,newPassword}=req.body;if(!newPassword||newPassword.length<12)return res.status(400).json({message:'New password must be at least 12 characters'});const a=await Admin.findById(req.admin.id);if(!await bcrypt.compare(currentPassword||'',a.passwordHash))return res.status(400).json({message:'Current password is incorrect'});a.passwordHash=await bcrypt.hash(newPassword,12);await a.save();res.clearCookie('token',cookieOptions).json({message:'Password updated'})}catch(e){next(e)}});
-for(const key of ['profile','about']){const Model=models[key];r.get('/'+key,async(req,res,next)=>{try{const value=await Model.findOne().sort({createdAt:-1});res.json(value||null)}catch(e){next(e)}})}
-for(const key of ['skills','projects','experience','education','certificates']){const Model=models[key];r.get('/'+key,async(req,res,next)=>{try{res.json(await Model.find().sort({createdAt:-1}))}catch(e){next(e)}})}
-r.post('/messages',async(req,res,next)=>{try{const m=await Message.create(req.body);res.status(201).json({message:'Message received',id:m._id})}catch(e){next(e)}});
-r.use('/admin',authMiddleware);
-for(const key of ['profile','about']){const Model=models[key];r.get('/admin/'+key,async(req,res,next)=>{try{const value=await Model.findOne().sort({createdAt:-1});res.json(value||null)}catch(e){next(e)}})}
-for(const [key,Model]of Object.entries(models)){if(key!=='profile'&&key!=='about')r.get('/admin/'+key,async(req,res,next)=>{try{res.json(await Model.find().sort({createdAt:-1}))}catch(e){next(e)}});if(key==='messages'){r.patch('/admin/messages/:id',async(req,res,next)=>{try{const d=await Model.findByIdAndUpdate(req.params.id,{read:Boolean(req.body.read)},{new:true,runValidators:true});if(!d)return res.status(404).json({message:'Not found'});res.json(d)}catch(e){next(e)}});r.delete('/admin/messages/:id',async(req,res,next)=>{try{const d=await Model.findByIdAndDelete(req.params.id);if(!d)return res.status(404).json({message:'Not found'});res.json({message:'Deleted'})}catch(e){next(e)}});continue}r.post('/admin/'+key,async(req,res,next)=>{try{res.status(201).json(await Model.create(req.body))}catch(e){next(e)}});r.put('/admin/'+key+'/:id',async(req,res,next)=>{try{const d=await Model.findByIdAndUpdate(req.params.id,req.body,{new:true,runValidators:true});if(!d)return res.status(404).json({message:'Not found'});res.json(d)}catch(e){next(e)}});r.delete('/admin/'+key+'/:id',async(req,res,next)=>{try{const d=await Model.findByIdAndDelete(req.params.id);if(!d)return res.status(404).json({message:'Not found'});res.json({message:'Deleted'}); }catch(e){next(e)}})}
-r.post('/admin/upload',authMiddleware,async(req,res,next)=>{try{const{upload,fileContentMatches}=await import('../middleware/upload.js');upload.single('file')(req,res,async e=>{if(e)return next(e);if(!req.file)return res.status(400).json({message:'Select a file'});try{if(!await fileContentMatches(req.file)){await unlink(req.file.path).catch(()=>{});return res.status(415).json({message:'File contents do not match an allowed image or PDF type'})}res.status(201).json({url:'/uploads/'+req.file.filename})}catch(error){await unlink(req.file.path).catch(()=>{});next(error)}})}catch(e){next(e)}});
+import { Router } from "express";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import rateLimit from "express-rate-limit";
+import { unlink } from "node:fs/promises";
+import {
+  Admin,
+  Profile,
+  About,
+  Skill,
+  Project,
+  Experience,
+  Education,
+  Certificate,
+  Message,
+} from "../models/index.js";
+import { authMiddleware } from "../middleware/auth.js";
+const r = Router();
+const models = {
+  profile: Profile,
+  about: About,
+  skills: Skill,
+  projects: Project,
+  experience: Experience,
+  education: Education,
+  certificates: Certificate,
+  messages: Message,
+};
+const loginLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many login attempts. Try again later." },
+});
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  partitioned: process.env.NODE_ENV === "production",
+};
+r.post("/auth/login", loginLimit, async (req, res, next) => {
+  try {
+    const { username, password } = req.body;
+    const a = await Admin.findOne({ username });
+    if (!a || !(await bcrypt.compare(password || "", a.passwordHash)))
+      return res.status(401).json({ message: "Invalid username or password" });
+    const token = jwt.sign(
+      { id: a._id, username: a.username },
+      process.env.JWT_SECRET,
+      { expiresIn: "8h" },
+    );
+    res.cookie("token", token, {
+      ...cookieOptions,
+      maxAge: 8 * 60 * 60 * 1000,
+    });
+    res.json({ username: a.username });
+  } catch (e) {
+    next(e);
+  }
+});
+r.get("/auth/me", authMiddleware, (req, res) =>
+  res.json({ username: req.admin.username }),
+);
+r.post("/auth/logout", (req, res) =>
+  res.clearCookie("token", cookieOptions).json({ message: "Logged out" }),
+);
+r.put("/auth/password", authMiddleware, async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!newPassword || newPassword.length < 12)
+      return res
+        .status(400)
+        .json({ message: "New password must be at least 12 characters" });
+    const a = await Admin.findById(req.admin.id);
+    if (!(await bcrypt.compare(currentPassword || "", a.passwordHash)))
+      return res.status(400).json({ message: "Current password is incorrect" });
+    a.passwordHash = await bcrypt.hash(newPassword, 12);
+    await a.save();
+    res
+      .clearCookie("token", cookieOptions)
+      .json({ message: "Password updated" });
+  } catch (e) {
+    next(e);
+  }
+});
+for (const key of ["profile", "about"]) {
+  const Model = models[key];
+  r.get("/" + key, async (req, res, next) => {
+    try {
+      const value = await Model.findOne().sort({ createdAt: -1 });
+      res.json(value || null);
+    } catch (e) {
+      next(e);
+    }
+  });
+}
+for (const key of [
+  "skills",
+  "projects",
+  "experience",
+  "education",
+  "certificates",
+]) {
+  const Model = models[key];
+  r.get("/" + key, async (req, res, next) => {
+    try {
+      res.json(await Model.find().sort({ createdAt: -1 }));
+    } catch (e) {
+      next(e);
+    }
+  });
+}
+r.post("/messages", async (req, res, next) => {
+  try {
+    const m = await Message.create(req.body);
+    res.status(201).json({ message: "Message received", id: m._id });
+  } catch (e) {
+    next(e);
+  }
+});
+r.use("/admin", authMiddleware);
+for (const key of ["profile", "about"]) {
+  const Model = models[key];
+  r.get("/admin/" + key, async (req, res, next) => {
+    try {
+      const value = await Model.findOne().sort({ createdAt: -1 });
+      res.json(value || null);
+    } catch (e) {
+      next(e);
+    }
+  });
+}
+for (const [key, Model] of Object.entries(models)) {
+  if (key !== "profile" && key !== "about")
+    r.get("/admin/" + key, async (req, res, next) => {
+      try {
+        res.json(await Model.find().sort({ createdAt: -1 }));
+      } catch (e) {
+        next(e);
+      }
+    });
+  if (key === "messages") {
+    r.patch("/admin/messages/:id", async (req, res, next) => {
+      try {
+        const d = await Model.findByIdAndUpdate(
+          req.params.id,
+          { read: Boolean(req.body.read) },
+          { new: true, runValidators: true },
+        );
+        if (!d) return res.status(404).json({ message: "Not found" });
+        res.json(d);
+      } catch (e) {
+        next(e);
+      }
+    });
+    r.delete("/admin/messages/:id", async (req, res, next) => {
+      try {
+        const d = await Model.findByIdAndDelete(req.params.id);
+        if (!d) return res.status(404).json({ message: "Not found" });
+        res.json({ message: "Deleted" });
+      } catch (e) {
+        next(e);
+      }
+    });
+    continue;
+  }
+  r.post("/admin/" + key, async (req, res, next) => {
+    try {
+      res.status(201).json(await Model.create(req.body));
+    } catch (e) {
+      next(e);
+    }
+  });
+  r.put("/admin/" + key + "/:id", async (req, res, next) => {
+    try {
+      const d = await Model.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+        runValidators: true,
+      });
+      if (!d) return res.status(404).json({ message: "Not found" });
+      res.json(d);
+    } catch (e) {
+      next(e);
+    }
+  });
+  r.delete("/admin/" + key + "/:id", async (req, res, next) => {
+    try {
+      const d = await Model.findByIdAndDelete(req.params.id);
+      if (!d) return res.status(404).json({ message: "Not found" });
+      res.json({ message: "Deleted" });
+    } catch (e) {
+      next(e);
+    }
+  });
+}
+r.post("/admin/upload", authMiddleware, async (req, res, next) => {
+  try {
+    const { upload, fileContentMatches } =
+      await import("../middleware/upload.js");
+    upload.single("file")(req, res, async (e) => {
+      if (e) return next(e);
+      if (!req.file) return res.status(400).json({ message: "Select a file" });
+      try {
+        if (!(await fileContentMatches(req.file))) {
+          await unlink(req.file.path).catch(() => {});
+          return res
+            .status(415)
+            .json({
+              message:
+                "File contents do not match an allowed image or PDF type",
+            });
+        }
+        res.status(201).json({ url: "/uploads/" + req.file.filename });
+      } catch (error) {
+        await unlink(req.file.path).catch(() => {});
+        next(error);
+      }
+    });
+  } catch (e) {
+    next(e);
+  }
+});
 export default r;
-

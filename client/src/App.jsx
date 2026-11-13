@@ -1,1 +1,28 @@
-import{Routes,Route}from'react-router-dom';import{AuthProvider}from'./context/AuthContext';import Home from'./pages/Home';import Login from'./pages/admin/Login';import Dashboard from'./pages/admin/Dashboard';import ProtectedRoute from'./components/admin/ProtectedRoute';export default function App(){return <AuthProvider><Routes><Route path="/" element={<Home/>}/><Route path="/admin/login" element={<Login/>}/><Route element={<ProtectedRoute/>}><Route path="/admin/*" element={<Dashboard/>}/></Route><Route path="*" element={<main className="wrap"><h1>Page not found</h1><a href="/">Return home</a></main>}/></Routes></AuthProvider>}
+import { Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import Home from "./pages/Home";
+import Login from "./pages/admin/Login";
+import Dashboard from "./pages/admin/Dashboard";
+import ProtectedRoute from "./components/admin/ProtectedRoute";
+export default function App() {
+  return (
+    <AuthProvider>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/admin/login" element={<Login />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/admin/*" element={<Dashboard />} />
+        </Route>
+        <Route
+          path="*"
+          element={
+            <main className="wrap">
+              <h1>Page not found</h1>
+              <a href="/">Return home</a>
+            </main>
+          }
+        />
+      </Routes>
+    </AuthProvider>
+  );
+}
