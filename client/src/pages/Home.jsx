@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import api from "../services/api";
-import assetUrl, {
-  downloadAssetUrl,
-  staticAssetFallback,
-} from "../utils/assetUrl";
+import AssetImage from "../components/AssetImage";
+import { downloadAssetUrl, staticAssetFallback } from "../utils/assetUrl";
 import RevealCard from "../components/RevealCard";
 
 const sections = [
@@ -268,17 +266,11 @@ export default function Home() {
             <b />
           </div>
           {p?.photo && (
-            <img
+            <AssetImage
               className="avatar"
-              src={assetUrl(p.photo)}
-              onError={(e) => {
-                const fallback = staticAssetFallback(p.photo);
-                if (fallback) {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = fallback;
-                }
-              }}
+              value={p.photo}
               alt={p.name || "Profile"}
+              fallbackLabel="PROFILE PHOTO UNAVAILABLE"
               width="168"
               height="168"
               loading="eager"
@@ -426,18 +418,26 @@ export default function Home() {
                       {(image || s === "projects") && (
                         <div className="project-image-wrap">
                           {image ? (
-                            <img
-                              src={assetUrl(image)}
-                              onError={(e) => {
-                                const fallback = staticAssetFallback(image);
-                                if (fallback) {
-                                  e.currentTarget.onerror = null;
-                                  e.currentTarget.src = fallback;
-                                }
-                              }}
-                              alt=""
+                            <AssetImage
+                              value={image}
+                              alt={x.title || "Project image"}
+                              fallbackLabel="PROJECT IMAGE UNAVAILABLE"
                               loading="lazy"
                               decoding="async"
+                              fallback={
+                                <div
+                                  className="project-placeholder"
+                                  aria-hidden="true"
+                                >
+                                  <span>
+                                    {(x.techStack || [])
+                                      .slice(0, 3)
+                                      .join(" / ") || "FULL STACK · DEVOPS"}
+                                  </span>
+                                  <i>∞</i>
+                                  <b>IMAGE UNAVAILABLE</b>
+                                </div>
+                              }
                             />
                           ) : (
                             <div

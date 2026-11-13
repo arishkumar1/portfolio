@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
-import assetUrl, { staticAssetFallback } from "../../utils/assetUrl";
+import AssetImage from "../../components/AssetImage";
 import RevealCard from "../../components/RevealCard";
 
 const fields = {
@@ -416,18 +416,19 @@ function Manage({ section }) {
                   {row.description || row.intro || row.content || row.category}
                 </p>
                 {(row.image || row.photo) && (
-                  <img
-                    src={assetUrl(row.image || row.photo)}
-                    onError={(e) => {
-                      const fallback = staticAssetFallback(
-                        row.image || row.photo,
-                      );
-                      if (fallback) {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = fallback;
-                      }
-                    }}
-                    alt=""
+                  <AssetImage
+                    className="admin-record-image"
+                    value={row.image || row.photo}
+                    alt={row.title || row.name || "Portfolio image"}
+                    fallbackLabel="IMAGE UNAVAILABLE"
+                    fallback={
+                      <div
+                        className="admin-image-placeholder"
+                        aria-hidden="true"
+                      >
+                        <span>IMAGE UNAVAILABLE</span>
+                      </div>
+                    }
                   />
                 )}
                 <button onClick={() => setEdit(row)}>Edit</button>

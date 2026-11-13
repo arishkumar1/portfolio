@@ -1969,6 +1969,47 @@ body #root > main {
   color: #ffa3af;
   font-size: 0.8rem;
 }
+.asset-unavailable {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  overflow: hidden;
+  background: linear-gradient(140deg, #153e36, #0d2421);
+  color: #9dc9bc;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+.asset-unavailable.avatar {
+  border: 2px solid #79d8c277;
+  border-radius: 50%;
+  box-shadow: 0 0 50px #40cbb044;
+  font-size: 0.52rem;
+  letter-spacing: 0.06em;
+}
+.project-image-wrap > .asset-unavailable {
+  position: absolute;
+  inset: 0;
+}
+.admin .admin-record-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.admin .admin-image-placeholder {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  background:
+    radial-gradient(ellipse at center, #20806d55, transparent 53%),
+    linear-gradient(140deg, #16372f, #0a1f1c);
+  color: #89bdb0;
+  font-size: 0.64rem;
+  letter-spacing: 0.13em;
+}
 .portfolio-home {
   overflow: clip;
 }

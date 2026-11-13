@@ -24,6 +24,10 @@ The repository includes a Render Blueprint at `render.yaml` and Vercel SPA routi
 
 Render files persist on the attached disk mounted at `server/uploads`; without persistent storage or an object storage service, uploaded media can be lost on restart or deploy. Vercel rewrites client routes to `index.html` for React Router deep links. HTTPS is required for production authentication cookies.
 
+### Render static-site uploads
+
+The Render frontend is a static site and cannot serve files uploaded to the API service. Set the frontend's `VITE_API_URL` to the API service origin plus `/api` so the client resolves `/uploads/...` against the API host. Uploaded files must remain on the API service's persistent disk, mounted at the same `UPLOAD_DIR` path. A file uploaded before persistent storage was configured, or lost from an ephemeral filesystem, must be uploaded again from the admin portal.
+
 ## Admin flow checklist
 
 - Run the seed command and log in with the configured credentials.
