@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Eye, EyeOff, LockKeyhole, UserRound, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, LockKeyhole, UserRound } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export default function Login() {
@@ -34,7 +34,7 @@ export default function Login() {
   return <main className="login login-scene">
     <div className="login-glow login-glow-a"/><div className="login-glow login-glow-b"/>
     <form className={`form panel login-card${shake ? ' login-shake' : ''}`} onSubmit={submit}>
-      <div className="login-brand"><span className="login-mark"><Sparkles size={21}/></span><span>PORTFOLIO <b>ADMIN</b></span></div>
+      <div className="login-brand"><span>PORTFOLIO <b>ADMIN</b></span></div>
       <div className="login-heading"><p className="login-eyebrow">SECURE ACCESS</p><h1>Welcome back</h1><p>Sign in to manage your portfolio.</p></div>
       <label className="login-label" htmlFor="admin-username">Admin</label>
       <div className="login-input-wrap"><UserRound size={18}/><input id="admin-username" name="username" autoComplete="username" placeholder="Admin" required value={username} onChange={e=>setUsername(e.target.value)} aria-invalid={Boolean(error)}/></div>
