@@ -10,7 +10,7 @@ Install Node.js 20+ and create a MongoDB Atlas cluster. In Atlas, add your curre
 4. In another terminal, from `portfolio/client`, run `npm install`, then `npm run dev`.
 5. Visit `http://localhost:5173/admin/login`. Admin credentials are the values in `server/.env`.
 
-Uploads are stored locally in `server/uploads` and served by Express. For production, configure a persistent disk or replace the upload adapter with object storage such as Cloudinary; ephemeral hosting filesystems are not suitable for durable uploads.
+New admin uploads are validated and stored as binary assets in MongoDB, then served through the API. This keeps newly uploaded project images and resumes available across server restarts without relying on an ephemeral filesystem. Existing `/uploads/...` links remain supported when their files still exist on the server disk.
 
 ## Deployment
 
@@ -26,7 +26,7 @@ Render files persist on the attached disk mounted at `server/uploads`; without p
 
 ### Render static-site uploads
 
-The Render frontend is a static site and cannot serve files uploaded to the API service. Set the frontend's `VITE_API_URL` to the API service origin plus `/api` so the client resolves `/uploads/...` against the API host. Uploaded files must remain on the API service's persistent disk, mounted at the same `UPLOAD_DIR` path. A file uploaded before persistent storage was configured, or lost from an ephemeral filesystem, must be uploaded again from the admin portal.
+The Render frontend is a static site and cannot serve files uploaded to the API service. Set the frontend's `VITE_API_URL` to the API service origin plus `/api` so the client resolves `/api/media/...` against the API host. New media is stored in MongoDB; old `/uploads/...` files still depend on the API service's disk. A file lost from an ephemeral filesystem must be uploaded again from the admin portal.
 
 ## Admin flow checklist
 

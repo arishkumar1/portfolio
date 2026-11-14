@@ -3,6 +3,7 @@ services:
     name: arish-portfolio-api
     runtime: node
     plan: starter
+    autoDeployTrigger: checksPass
     buildCommand: cd server && npm install
     startCommand: cd server && npm start
     healthCheckPath: /health
@@ -25,3 +26,5 @@ services:
         sync: false
       - key: CLIENT_URL
         sync: false
+      - key: PUBLIC_API_ORIGIN
+        value: https://arishportfolio.onrender.com

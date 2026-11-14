@@ -4,6 +4,9 @@ const adminSchema = new mongoose.Schema(
   {
     username: { type: String, required: true, unique: true, trim: true },
     passwordHash: { type: String, required: true },
+    failedLoginAttempts: { type: Number, default: 0 },
+    lockUntil: { type: Date, default: null },
+    tokenVersion: { type: Number, default: 0 },
   },
   { ...opts, collection: "admins" },
 );
@@ -92,6 +95,24 @@ const messageSchema = new mongoose.Schema(
   },
   { ...opts, collection: "messages" },
 );
+const assetSchema = new mongoose.Schema(
+  {
+    filename: { type: String, required: true, maxlength: 255 },
+    contentType: {
+      type: String,
+      required: true,
+      enum: [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+        "application/pdf",
+      ],
+    },
+    data: { type: Buffer, required: true },
+  },
+  { ...opts, collection: "assets" },
+);
 export const Admin =
   mongoose.models.Admin || mongoose.model("Admin", adminSchema);
 export const Profile =
@@ -111,3 +132,5 @@ export const Certificate =
   mongoose.model("Certificate", certificateSchema);
 export const Message =
   mongoose.models.Message || mongoose.model("Message", messageSchema);
+export const Asset =
+  mongoose.models.Asset || mongoose.model("Asset", assetSchema);

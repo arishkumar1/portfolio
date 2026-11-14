@@ -12,6 +12,8 @@ try {
     throw new Error(
       "MONGO_URI, ADMIN_USERNAME and ADMIN_PASSWORD are required",
     );
+  if (process.env.ADMIN_PASSWORD.length < 12)
+    throw new Error("ADMIN_PASSWORD must be at least 12 characters");
   await mongoose.connect(process.env.MONGO_URI);
   const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
   await Admin.findOneAndUpdate(

@@ -42,6 +42,11 @@ export function downloadAssetUrl(value) {
       if (filename && !filename.includes("/")) {
         url.pathname = `/uploads/download/${encodeURIComponent(filename)}`;
       }
+    } else if (/^\/api\/media\/[a-f\d]{24}$/i.test(url.pathname)) {
+      url.pathname = url.pathname.replace(
+        "/api/media/",
+        "/api/media/download/",
+      );
     }
     return url.href;
   } catch {
